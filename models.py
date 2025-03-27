@@ -36,4 +36,4 @@ class Comment(Base):
     parent_post = relationship("BlogPost", back_populates="comments")
 
 # Register models with SQLAlchemy
-db.Model = Base 
+# db.Model = Base 
