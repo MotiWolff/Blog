@@ -13,7 +13,7 @@ import os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from forms import CreatePostForm, RegisterForm, LoginForm, CommentForm
-from database import db
+from database import db, init_db
 from models import User, BlogPost, Comment
 
 load_dotenv()
@@ -27,7 +27,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///posts.db'
 # Initialize extensions
 ckeditor = CKEditor(app)
 Bootstrap4(app)
-db.init_app(app)
+
+# Initialize database
+init_db(app)
 
 # Configure Flask-Login
 login_manager = LoginManager()
@@ -42,10 +44,6 @@ gravatar = Gravatar(app,
                     force_lower=False,
                     use_ssl=False,
                     base_url=None)
-
-# Create database tables
-with app.app_context():
-    db.create_all()
 
 @login_manager.user_loader
 def load_user(user_id):
