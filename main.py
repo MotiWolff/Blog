@@ -1,6 +1,6 @@
 from datetime import date
 from flask import Flask, abort, render_template, redirect, url_for, flash, request
-from flask_bootstrap import Bootstrap4
+from flask_bootstrap import Bootstrap5
 from flask_ckeditor import CKEditor
 from flask_gravatar import Gravatar
 from flask_login import login_user, LoginManager, current_user, logout_user
@@ -32,7 +32,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize extensions
 ckeditor = CKEditor(app)
-Bootstrap4(app)
+Bootstrap5(app)
 
 # Initialize database
 init_db(app)
