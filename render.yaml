@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: flask-blog
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn main:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.1
+      - key: ENVIRONMENT
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DELETION_CODE
+        generateValue: true
+      - key: APP_EMAIL
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: PASS
+        sync: false
+    autoDeploy: true
+
+databases:
+  - name: flask-blog-db
+    databaseName: blogdb
+    user: blog_user
+    plan: free 

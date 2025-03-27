@@ -1,67 +1,121 @@
-{% include "header.html" %}
-
+{% extends '_base.html' %}
 <!-- Page Header-->
-<header
-  class="masthead"
-  style="background-image: url('../static/assets/img/home-bg.jpg')"
->
-  <div class="container position-relative px-4 px-lg-5">
-    <div class="row gx-4 gx-lg-5 justify-content-center">
-      <div class="col-md-10 col-lg-8 col-xl-7">
-        <div class="site-heading">
-          <h1>Moti's Blog</h1>
-          <span class="subheading">A collection of random musings.</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</header>
+        {% block header %}
+        <header class="masthead"
+                style="background-image: url('static/assets/img/{{ bg_image }}')">
+            <div class="container position-relative px-4 px-lg-5">
+                <div class="row gx-4 gx-lg-5 justify-content-center">
+                    <div class="col-md-10 col-lg-8 col-xl-7">
+                        <div class="page-heading">
+                            <h1>{{title}}</h1>
+                            <span class="subheading">{{subtitle}}</span>
+
+                            {% with messages = get_flashed_messages(with_categories=true) %}
+                                {% if messages: %}
+                                    <br><br>
+                                    <hr class="my-4" />
+                                    <div class="flash">
+                                        {% for category, message in messages %}
+                                            <div class="flash {{ category }}">
+                                                <p>{{ message|safe }}</p>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                    <hr class="my-4" />
+                                {% endif %}
+                            {% endwith %}
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        {% endblock %}
+
+
+
 <!-- Main Content-->
+{% block content %}
 <div class="container px-4 px-lg-5">
-  <div class="row gx-4 gx-lg-5 justify-content-center">
-    <div class="col-md-10 col-lg-8 col-xl-7">
-      <!-- Post preview-->
-      {% for post in all_posts %}
-      <div class="post-preview">
-        <a href="{{ url_for('show_post', post_id=post.id) }}">
-          <h2 class="post-title">{{ post.title }}</h2>
-          <h3 class="post-subtitle">{{ post.subtitle }}</h3>
-        </a>
-        <p class="post-meta">
-          Posted by
-          <!-- post.author is now a User object -->
-          <a href="#">{{post.author.name}}</a>
-          on {{post.date}}
-          <!-- Only show delete button if user id is 1 (admin user) -->
-          {% if current_user.id == 1: %}
-          <a href="{{url_for('delete_post', post_id=post.id) }}">✘</a>
-          {% endif %}
-        </p>
-      </div>
-      <!-- Divider-->
-      <hr class="my-4" />
-      {% endfor %}
+    <div class="row gx-4 gx-lg-5 justify-content-center">
+        <div class="col-md-10 col-lg-8 col-xl-7">
+            <!--  Search functionality  -->
+            <div class="container mt-4">
+                <form class="d-flex" role="search" action="/search" method="get">
+                    <div class="input-group">
+                        <input class="form-control"
+                               type="search"
+                               placeholder="Search"
+                               aria-label="Search"
+                               name="query">
+                        <button class="btn btn-outline-primary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+             <div id="post-container">
+                <!-- Post preview-->
+                    {% for post in visible_posts %}
+                    <div class="post-preview">
+                        <a href="{{ url_for('show_post', post_id=post.id) }}">
+                            <h2 class="post-title">{{ post.title }}</h2>
+                            <h3 class="post-subtitle">{{ post.subtitle }}</h3>
+                        </a>
+                        <p class="post-meta">Posted by
+                            <a href="#">{{post.author.name}}</a> on {{post.date}}
 
-      <!-- New Post -->
-      <!-- Only show Create Post button if user id is 1 (admin user) -->
-      {% if current_user.id == 1: %}
-      <div class="d-flex justify-content-end mb-4">
-        <a
-          class="btn btn-primary float-right"
-          href="{{url_for('add_new_post')}}"
-          >Create New Post</a
-        >
-      </div>
-      {% endif %}
+                        <!-- Allow only ADMIN (id=1) to create and delete posts -->
+                        {% if current_user.id == 1: %}
+<!--                            <a href="{{url_for('delete_post', post_id=post.id) }}">✘</a>-->
+                            <a href="#" class="delete-post" data-post-id="{{ post.id }}">✘</a>
+                        {% endif %}
+                        </p>
+                        <!-- js: show the hidden form to ADMIN to input SecretKey when ✘ clicked -->
+                        <!-- js file reference in _base.html -->
+                        <form method="POST"
+                              action="/delete-post/{{ post.id }}"
+                              id="deleteForm{{ post.id }}"
+                              style="display: none;">
+                            <input type="password"
+                                   name="delCode"
+                                   style="font-size: 0.8em"
+                                   placeholder="  Deletion Code">
+                            <button type="submit"
+                                    class="btn btn-outline-danger btn-sm"
+                                    style="font-size: 0.8em">Confirm Delete</button>
+                        </form>
 
-      <!-- Pager-->
-      <div class="d-flex justify-content-end mb-4">
-        <a class="btn btn-secondary text-uppercase" href="404.html"
-          >Older Posts →</a
-        >
-      </div>
+                    </div>
+                    <!-- Divider-->
+                    <hr class="my-4" />
+                {% endfor %}
+             </div>
+            <!-- New Post -->
+            <!-- Allow only ADMIN (id=1) to create and delete posts -->
+            {% if current_user.id == 1: %}
+                <div class="d-flex justify-content-end mb-4">
+                    <a class="btn btn-primary float-right"
+                       href="{{url_for('add_new_post')}}">Create New Post
+                    </a>
+                </div>
+            {% endif %}
+
+            <!-- Pager-->
+            <!-- js: show next 6 posts when Previous Posts btn is clicked  -->
+            <!-- js file reference in _base.html -->
+            <div class="d-flex justify-content-end mb-4">
+                <button class="btn btn-primary float-right" id="previous-posts-button"> Previous Posts → </button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
-{% include "footer.html" %}
+<!-- Link JavaScripts -->
+<script>
+    let allPosts = {{ all_posts|tojson }};
+    let visiblePostsInitialCount = {{ visible_posts|length }};
+    let currentUserId = {{ user_id }}
+</script>
+
+{% endblock %}
