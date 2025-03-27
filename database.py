@@ -11,7 +11,6 @@ def init_db(app):
     with app.app_context():
         # Import models here to avoid circular imports
         from models import BlogPost, User, Comment
-        # Drop all tables first to ensure clean state
-        db.drop_all()
         # Create all tables
-        db.create_all() 
+        db.create_all()
+        print("Database tables created successfully!") 

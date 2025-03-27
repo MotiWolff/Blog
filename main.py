@@ -22,7 +22,13 @@ year = datetime.now().year
 # Create Flask app
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'zOju0f7Gs3bCI9dhz7xBXKL33cQm9fHD'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///posts.db'
+
+# Database configuration
+database_url = os.getenv('DATABASE_URL', 'sqlite:///posts.db')
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize extensions
 ckeditor = CKEditor(app)
