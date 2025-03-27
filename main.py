@@ -9,9 +9,6 @@ from sqlalchemy.orm import relationship, DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import Integer, String, Text
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import CreatePostForm, RegisterForm, LoginForm, CommentForm
-# Optional: add contact me email functionality (Day 60)
-# import smtplib
 from datetime import date, datetime
 import smtplib
 from dotenv import load_dotenv
@@ -28,6 +25,13 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'zOju0f7Gs3bCI9dhz7xBXKL33cQm9fHD'
 ckeditor = CKEditor(app)
 Bootstrap5(app)
+
+# Initialize the database
+def init_app(app):
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///posts.db'
+    db.init_app(app)
+    with app.app_context():
+        db.create_all()
 
 # Configure Flask-Login
 login_manager = LoginManager()
@@ -52,9 +56,11 @@ gravatar = Gravatar(app,
 # CREATE DATABASE
 class Base(DeclarativeBase):
     pass
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///posts.db'
+
 db = SQLAlchemy(model_class=Base)
-db.init_app(app)
+
+# Initialize the database
+init_app(app)
 
 
 # CONFIGURE TABLES
@@ -98,12 +104,8 @@ class Comment(db.Model):
     author_id: Mapped[int] = mapped_column(Integer, db.ForeignKey("users.id"))
     comment_author = relationship("User", back_populates="comments")
     # Child Relationship to the BlogPosts
-    post_id: Mapped[str] = mapped_column(Integer, db.ForeignKey("blog_posts.id"))
+    post_id: Mapped[int] = mapped_column(Integer, db.ForeignKey("blog_posts.id"))
     parent_post = relationship("BlogPost", back_populates="comments")
-
-
-with app.app_context():
-    db.create_all()
 
 
 # Create an admin-only decorator
@@ -305,4 +307,4 @@ def contact():
 
 
 if __name__ == "__main__":
-    app.run(debug=False, port=5001)
+    app.run(debug=False)
