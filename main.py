@@ -20,11 +20,21 @@ from forms import CreatePostForm, RegisterForm, LoginForm, CommentForm
 load_dotenv()
 year = datetime.now().year
 
+# Create Flask app
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'zOju0f7Gs3bCI9dhz7xBXKL33cQm9fHD'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///posts.db'
+
+# Initialize extensions
+ckeditor = CKEditor(app)
+Bootstrap(app)
+
 # CREATE DATABASE
 class Base(DeclarativeBase):
     pass
 
 db = SQLAlchemy(model_class=Base)
+db.init_app(app)
 
 # CONFIGURE TABLES
 class BlogPost(db.Model):
@@ -58,16 +68,6 @@ class Comment(db.Model):
     comment_author = relationship("User", back_populates="comments")
     post_id: Mapped[int] = mapped_column(Integer, db.ForeignKey("blog_posts.id"))
     parent_post = relationship("BlogPost", back_populates="comments")
-
-# Create Flask app
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'zOju0f7Gs3bCI9dhz7xBXKL33cQm9fHD'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///posts.db'
-
-# Initialize extensions
-ckeditor = CKEditor(app)
-Bootstrap(app)
-db.init_app(app)
 
 # Configure Flask-Login
 login_manager = LoginManager()
