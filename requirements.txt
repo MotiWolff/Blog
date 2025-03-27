@@ -8,7 +8,7 @@ Flask-Bootstrap==3.3.7.1
 email-validator==2.1.0.post1
 python-dotenv==1.0.1
 psycopg2-binary==2.9.9
-Werkzeug==2.3.7
+Werkzeug>=3.0.0
 WTForms==3.0.1
 gunicorn==21.2.0
 markupsafe==2.1.3
