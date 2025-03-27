@@ -1,12 +1,7 @@
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import relationship, DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy import Integer, String, Text
 from flask_login import UserMixin
-
-class Base(DeclarativeBase):
-    pass
-
-db = SQLAlchemy(model_class=Base)
+from database import db
 
 class BlogPost(db.Model):
     __tablename__ = "blog_posts"

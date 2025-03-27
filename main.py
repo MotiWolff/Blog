@@ -13,7 +13,8 @@ import os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from forms import CreatePostForm, RegisterForm, LoginForm, CommentForm
-from models import db, User, BlogPost, Comment
+from database import db
+from models import User, BlogPost, Comment
 
 load_dotenv()
 year = datetime.now().year
