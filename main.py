@@ -40,11 +40,15 @@ app.config['DEL_CODE'] = os.environ['DELETION_CODE']
 if IS_PRODUCTION:
     # Handle Render PostgreSQL URL
     database_url = os.environ.get('DATABASE_URL')
-    if not database_url:
-        raise ValueError("DATABASE_URL environment variable is not set")
-    if database_url.startswith('postgres://'):
-        database_url = database_url.replace('postgres://', 'postgresql://', 1)
-    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    if database_url:
+        if database_url.startswith('postgres://'):
+            database_url = database_url.replace('postgres://', 'postgresql://', 1)
+        app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    else:
+        # Fallback to SQLite if DATABASE_URL is not set (should not happen in production)
+        print("Warning: DATABASE_URL not set, falling back to SQLite")
+        sqlite_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'blog.db')
+        app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{sqlite_path}'
 else:
     # Use SQLite for local development
     sqlite_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'blog.db')
@@ -192,19 +196,17 @@ def logout():
 
 @app.route('/')
 def home():
-    # result = db.session.execute(db.select(BlogPost))
-    if os.environ.get("LOCAL") == 'False':  # Check for Render.com environment
+    if IS_PRODUCTION:
         # PostgreSQL query
         result = db.session.execute(
             db.select(BlogPost).order_by(desc(func.to_date(BlogPost.date, 'Month DD, YYYY')))
         )
-        posts = result.scalars().all()
     else:
         # SQLite query
         result = db.session.execute(
             db.select(BlogPost).order_by(func.strftime('%Y-%m-%d', func.replace(BlogPost.date, ',', '')).desc())
         )
-        posts = result.scalars().all()
+    posts = result.scalars().all()
     visible_posts = posts[:3]  # Initial 3 posts
     all_posts_dicts = [
         {
@@ -233,29 +235,41 @@ def home():
 
 @app.route('/search')
 def search():
-    query = request.args.get('query')  # Get the search query from the URL
-    results = []
-    if query:
-        posts = BlogPost.query.all()
+    query = request.args.get('query', '').lower()
+    if not query:
+        return redirect(url_for('home'))
 
-        for post in posts:
-            if re.search(re.escape(query), post.title, re.IGNORECASE):
-                results.append((post, highlight_query(post.title, query), None))
-            elif post.subtitle and re.search(re.escape(query), post.subtitle, re.IGNORECASE):
-                results.append((post, highlight_query(f"{post.subtitle}", query), None))
-            elif re.search(re.escape(query), post.body, re.IGNORECASE):
-                body_phrase = find_phrase(post.body, query)
-                results.append((post, highlight_query(f"{body_phrase}", query), None))
-
-            for comment in post.comments:
-                if re.search(re.escape(query), comment.text, re.IGNORECASE):
-                    comment_phrase = find_phrase(comment.text, query)
-                    results.append((post, highlight_query(f"{comment_phrase}", query), comment))
-
+    if IS_PRODUCTION:
+        # PostgreSQL query
+        result = db.session.execute(
+            db.select(BlogPost).order_by(desc(func.to_date(BlogPost.date, 'Month DD, YYYY')))
+        )
     else:
-        results = []
+        # SQLite query
+        result = db.session.execute(
+            db.select(BlogPost).order_by(func.strftime('%Y-%m-%d', func.replace(BlogPost.date, ',', '')).desc())
+        )
+    
+    posts = result.scalars().all()
+    results = []
+    
+    for post in posts:
+        if (query in post.title.lower() or 
+            query in post.subtitle.lower() or 
+            query in post.body.lower()):
+            
+            # Find a relevant snippet of text containing the query
+            snippet = find_phrase(post.body, query)
+            
+            results.append({
+                'id': post.id,
+                'title': post.title,
+                'subtitle': post.subtitle,
+                'snippet': snippet,
+                'query': query
+            })
 
-    return render_template('search_results.html',
+    return render_template("search.html",
                            results=results,
                            query=query,
                            current_user=current_user,
