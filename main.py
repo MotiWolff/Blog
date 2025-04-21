@@ -225,7 +225,7 @@ def home():
                            visible_posts=visible_posts,
                            current_user=current_user,
                            user_id=user_id,
-                           title='Blog Project',
+                           title='The Debug Diaries',
                            subtitle='A collection of random musings',
                            bg_image="home-bg.jpg"
                            )
@@ -259,7 +259,7 @@ def search():
                            results=results,
                            query=query,
                            current_user=current_user,
-                           title='Blog Project',
+                           title='The Debug Diaries',
                            subtitle='A collection of random musings',
                            bg_image="home-bg.jpg"
                            )
@@ -391,38 +391,48 @@ def about():
 def contact():
     if request.method == "POST":
         data = request.form
-        email = os.getenv("EMAIL")
-        password = os.getenv("PASSWORD")
-        
-        # Validate environment variables
-        if not email or not password:
-            flash("Server configuration error. Please contact the administrator.", "error")
-            return render_template("contact.html", msg_sent=False, year=year, current_user=current_user)
-        
         try:
-            # Create the email message with proper Unicode support
+            # Create the email message
             msg = MIMEMultipart()
-            msg['From'] = email
-            msg['To'] = email
-            msg['Subject'] = "New Message from Blog"
+            msg['From'] = APP_EMAIL
+            msg['To'] = ADMIN_EMAIL
+            msg['Subject'] = "New Message from The Debug Diaries"
             
-            body = f"Name: {data['name']}\nEmail: {data['email']}\nPhone: {data['phone']}\nMessage: {data['message']}"
+            body = f"""
+            New message from your blog:
+            
+            Name: {data.get('name')}
+            Email: {data.get('email')}
+            Phone: {data.get('phone')}
+            Message: {data.get('message')}
+            """
             msg.attach(MIMEText(body, 'plain', 'utf-8'))
 
-            # Send the email
-            with smtplib.SMTP("smtp.gmail.com", 587) as connection:
+            # Send the email using Gmail SMTP
+            with smtplib.SMTP(G_URL, port=587) as connection:
                 connection.starttls()
-                connection.login(user=email, password=password)
+                connection.login(user=APP_EMAIL, password=PASS)
                 connection.send_message(msg)
             
-            return render_template("contact.html", msg_sent=True, year=year, current_user=current_user)
+            flash("Your message has been sent successfully!", "success")
+            return render_template("contact.html", 
+                                msg_sent=True,
+                                current_user=current_user,
+                                title="Contact Me",
+                                subtitle="Have questions? I have answers.",
+                                bg_image="contact-bg.jpg")
             
         except Exception as e:
             print(f"Error sending email: {e}")
             flash("Failed to send message. Please try again later.", "error")
-            return render_template("contact.html", msg_sent=False, year=year, current_user=current_user)
             
-    return render_template("contact.html", msg_sent=False, year=year, current_user=current_user)
+    return render_template("contact.html",
+                         msg_sent=False,
+                         current_user=current_user,
+                         title="Contact Me",
+                         subtitle="Have questions? I have answers.",
+                         bg_image="contact-bg.jpg")
+
 
 if __name__ == "__main__":
     if IS_PRODUCTION:
