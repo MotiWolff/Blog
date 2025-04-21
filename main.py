@@ -44,8 +44,9 @@ if IS_PRODUCTION:
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 else:
-    # Use SQLite in development
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
+    # Use SQLite for local development
+    sqlite_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'blog.db')
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{sqlite_path}'
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 

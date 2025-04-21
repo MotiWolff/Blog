@@ -11,7 +11,7 @@
                             <span class="subheading">{{subtitle}}</span>
 
                             {% with messages = get_flashed_messages(with_categories=true) %}
-                                {% if messages: %}
+                                {% if messages %}
                                     <br><br>
                                     <hr class="my-4" />
                                     <div class="flash">
@@ -39,10 +39,10 @@
 <div class="container px-4 px-lg-5">
     <div class="row gx-4 gx-lg-5 justify-content-center">
         <div class="col-md-10 col-lg-8 col-xl-7">
-            <!--  Search functionality  -->
-            <div class="container mt-4">
-                <form class="d-flex" role="search" action="/search" method="get">
-                    <div class="input-group">
+            <!--  Search functionality and Previous Posts button  -->
+            <div class="d-flex align-items-center gap-2 mt-4 mb-4 flex-wrap">
+                <form id="search-form" class="d-flex flex-grow-1" role="search" action="/search" method="get" style="max-width: 500px;">
+                    <div class="input-group w-100">
                         <input class="form-control"
                                type="search"
                                placeholder="Search"
@@ -53,6 +53,7 @@
                         </button>
                     </div>
                 </form>
+                <button class="btn btn-primary ms-2" type="button" id="previous-posts-button"> Previous Posts → </button>
             </div>
              <div id="post-container">
                 <!-- Post preview-->
@@ -66,8 +67,7 @@
                             <a href="#">{{post.author.name}}</a> on {{post.date}}
 
                         <!-- Allow only ADMIN (id=1) to create and delete posts -->
-                        {% if current_user.id == 1: %}
-<!--                            <a href="{{url_for('delete_post', post_id=post.id) }}">✘</a>-->
+                        {% if current_user.is_authenticated and current_user.id == 1 %}
                             <a href="#" class="delete-post" data-post-id="{{ post.id }}">✘</a>
                         {% endif %}
                         </p>
@@ -93,29 +93,25 @@
              </div>
             <!-- New Post -->
             <!-- Allow only ADMIN (id=1) to create and delete posts -->
-            {% if current_user.id == 1: %}
+            {% if current_user.is_authenticated and current_user.id == 1 %}
                 <div class="d-flex justify-content-end mb-4">
-                    <a class="btn btn-primary float-right"
+                    <a class="btn btn-primary float-end"
                        href="{{url_for('add_new_post')}}">Create New Post
                     </a>
                 </div>
             {% endif %}
 
-            <!-- Pager-->
-            <!-- js: show next 6 posts when Previous Posts btn is clicked  -->
-            <!-- js file reference in _base.html -->
-            <div class="d-flex justify-content-end mb-4">
-                <button class="btn btn-primary float-right" id="previous-posts-button"> Previous Posts → </button>
-            </div>
         </div>
     </div>
 </div>
 
 <!-- Link JavaScripts -->
 <script>
-    let allPosts = {{ all_posts|tojson }};
-    let visiblePostsInitialCount = {{ visible_posts|length }};
-    let currentUserId = {{ user_id }}
+    // Safely handle JSON data with proper escaping
+    const allPosts = JSON.parse('{{ all_posts|tojson|safe }}');
+    const visiblePostsInitialCount = {{ visible_posts|length }};
+    const currentUserId = {{ user_id|default(-1) }};
 </script>
+<script src="{{ url_for('static', filename='js/scripts.js') }}"></script>       
 
 {% endblock %}
